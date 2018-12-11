@@ -6,18 +6,18 @@ import expand
 win = visual.Window([1000, 800], monitor="testMonitor")
 mouse = event.Mouse()
 # Create a stimulus for a certain window
-studied = visual.TextStim(win, text="Studied", pos = (-.75, .75))
-unstudied = visual.TextStim(win, text="Not Studied", pos = (.75, .75))
-studied_rect = visual.Rect(win, units='pix', pos=[(a*b)/2 for a,b in zip(studied.pos, win.size)],
+studied = visual.TextStim(win, text="Studied", pos=(-.75, .75))
+unstudied = visual.TextStim(win, text="Not Studied", pos=(.75, .75))
+studied_rect = visual.Rect(win, units='pix', pos=[(a*b)/2 for a, b in zip(studied.pos, win.size)],
                            width=studied.boundingBox[0] + 20, height=studied.boundingBox[1] + 20,
                            )
-unstudied_rect = visual.Rect(win, units='pix', pos=[(a*b)/2 for a,b in zip(unstudied.pos, win.size)],
+unstudied_rect = visual.Rect(win, units='pix', pos=[(a*b)/2 for a, b in zip(unstudied.pos, win.size)],
                              width=unstudied.boundingBox[0] + 20, height=unstudied.boundingBox[1] + 20,
                              )
 
-bias_trials = expand.expand_grid({'safe': ['studied','unstudied'],
-                                  'correct':[True, False]
-                                 })
+bias_trials = expand.expand_grid({'safe': ['studied', 'unstudied'],
+                                  'correct': [True, False]
+                                  })
 bias_trials = expand.replicate(bias_trials, 2)
 bias_trials = bias_trials.sample(frac=1).reset_index(drop=True)
 
@@ -51,6 +51,7 @@ for x in bias_trials.itertuples():
 
 # Close the window
 win.close()
+
 
 # Close PsychoPy
 core.quit()
