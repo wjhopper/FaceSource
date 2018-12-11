@@ -1,0 +1,3 @@
+global win
+global mouse
+
