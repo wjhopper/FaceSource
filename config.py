@@ -1,3 +1,0 @@
-global win
-global mouse
-

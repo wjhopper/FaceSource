@@ -1,7 +1,4 @@
-import config
-
-
-def guess(factors, studied, studied_rect, unstudied, unstudied_rect):
+def draw_guess_stimuli(factors, studied, studied_rect, unstudied, unstudied_rect):
 
     if factors.safe == 'studied':
         studied.color = 'green'
@@ -14,23 +11,25 @@ def guess(factors, studied, studied_rect, unstudied, unstudied_rect):
     studied_rect.draw()
     unstudied.draw()
     unstudied_rect.draw()
-    config.win.flip()
+
+
+def guess_response(factors, mouse, studied_rect, unstudied_rect):
 
     resp = None
     while resp is None:
-        if config.mouse.isPressedIn(studied_rect, [0]):
+        if mouse.isPressedIn(studied_rect, [0]):
             resp = 'studied'
-        if config.mouse.isPressedIn(unstudied_rect, [0]):
+        if mouse.isPressedIn(unstudied_rect, [0]):
             resp = 'unstudied'
 
     # Wait until the mouse is no longer pressed, by doing nothing as long as it is pressed
-    while config.mouse.getPressed()[0]:
+    while mouse.getPressed()[0]:
         pass
 
     if resp == factors.correct and resp == factors.safe:
-        points = 1
-    elif resp == factors.correct and resp != factors.safe:
         points = 3
+    elif resp == factors.correct and resp != factors.safe:
+        points = 1
     elif resp != factors.correct and resp == factors.safe:
         points = -1
     else:
@@ -43,4 +42,3 @@ def points_feedback(text, points):
 
     text.text = str(points)
     text.draw()
-    config.win.flip()
