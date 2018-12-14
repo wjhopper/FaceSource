@@ -1,6 +1,11 @@
-from psychopy import core, visual, event, prefs
+from psychopy import core, visual, event
 import expand
 import trials
+import pandas as pd
+import numpy as np
+import glob
+import random
+
 
 # Create a window and mouse
 win = visual.Window([1500, 1100], monitor="testMonitor")
@@ -48,7 +53,7 @@ To see how well guessing the "risky" option works, only choose the response show
 Press the Space Bar to begin the first practice round.
     """
 ]
-instructions = visual.TextStim(win,wrapWidth=1.75, height=.085)
+instructions = visual.TextStim(win, wrapWidth=1.75, height=.085)
 for i in intro_text:
     instructions.text = i
     instructions.draw()
@@ -73,10 +78,10 @@ total_points_feedback = visual.TextStim(win, pos=(0, 0))
 bias_trials = expand.expand_grid({'safe': ['studied', 'unstudied'],
                                   'correct': ['studied', 'unstudied']
                                   })
-bias_trials = expand.replicate(bias_trials, 2)
-bias_trials = bias_trials.sort_values(by=['correct', 'safe'])
+bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
+bias_trials = bias_trials.sort_values(by=['correct', 'safe']).reset_index(drop=True)
 
-for practice_round in [1,2]:
+for practice_round in [1, ]:
     if practice_round == 2:
         instructions.text = """
 You'll now do one more round of guessing practice. This time, guess the safe response shown in green every trial, and \
@@ -112,6 +117,32 @@ total_points_feedback.draw()
 win.flip()
 event.waitKeys(keyList=['space'])
 
+# Set up pool of face-source stimuli files
+faces_table = pd.DataFrame({'m': glob.glob("faces/m[1-8].bmp"),
+                           'f': glob.glob("faces/f[1-8].bmp")
+                            })
+faces_table['m'] = np.random.permutation(faces_table['m'])
+faces_table['f'] = np.random.permutation(faces_table['f'])
+
+# Set up target and lure word pools
+with open('words.txt', 'r') as f:
+    words = f.read().splitlines()
+target_pool = words[:104]  # 8 practice words, 96 words for real trials
+lure_pool = words[104:(104+92)]  # 8 practice lures, 84 lures for real trials. 84 because primacy/recency items are not tested
+
+practice_study_trials = expand.expand_grid({'source': ['m', 'f'],
+                                            'block': list(range(1, 3)),
+                                            })
+practice_study_trials = expand.replicate(practice_study_trials, 2, ignore_index=True)
+practice_study_trials = practice_study_trials.groupby('block').apply(lambda y: y.sample(frac=1)).reset_index(drop=True)
+practice_study_trials = pd.concat([practice_study_trials,
+                                   pd.DataFrame({'word': target_pool[:8],
+                                                 'file': [faces_table.loc[0, y] for y in practice_study_trials.source],
+                                                 }),
+                                   pd.DataFrame(np.full(shape=(practice_study_trials.shape[0], 4), fill_value=np.nan),
+                                                columns=['response', 'RT', 'correct', 'points'])],
+                                  axis=1)
+practice_study_trials = practice_study_trials[['block', 'word', 'source', 'file', 'response', 'RT', 'correct', 'points']]
 # Close the window
 win.close()
 
