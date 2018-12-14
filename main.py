@@ -72,7 +72,6 @@ unstudied_rect = visual.Rect(win, units='pix', pos=[(a*b)/2 for a, b in zip(unst
 
 # Text objects for displaying points earned feedback
 guess_points_text = visual.TextStim(win, pos=(0, .75))
-recog_points_text = visual.TextStim(win, pos=(0, -.75))
 total_points_feedback = visual.TextStim(win, pos=(0, 0))
 
 bias_trials = expand.expand_grid({'safe': ['studied', 'unstudied'],
@@ -81,7 +80,7 @@ bias_trials = expand.expand_grid({'safe': ['studied', 'unstudied'],
 bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
 bias_trials = bias_trials.sort_values(by=['correct', 'safe']).reset_index(drop=True)
 
-for practice_round in [1, ]:
+for practice_round in [1, 2]:
     if practice_round == 2:
         instructions.text = """
 You'll now do one more round of guessing practice. This time, guess the safe response shown in green every trial, and \
@@ -130,11 +129,16 @@ with open('words.txt', 'r') as f:
 target_pool = words[:104]  # 8 practice words, 96 words for real trials
 lure_pool = words[104:(104+92)]  # 8 practice lures, 84 lures for real trials. 84 because primacy/recency items are not tested
 
+# Cross source and block
 practice_study_trials = expand.expand_grid({'source': ['m', 'f'],
                                             'block': list(range(1, 3)),
                                             })
+# Replicate twice, to make 4 trials per block
 practice_study_trials = expand.replicate(practice_study_trials, 2, ignore_index=True)
-practice_study_trials = practice_study_trials.groupby('block').apply(lambda y: y.sample(frac=1)).reset_index(drop=True)
+# Randomize the order of male/female sources in each block
+practice_study_trials = practice_study_trials.groupby('block').apply(lambda y: y.sample(frac=1))
+practice_study_trials = practice_study_trials.reset_index(drop=True)
+# Add the words to study, chosen image file, and empty response variables to the conditions
 practice_study_trials = pd.concat([practice_study_trials,
                                    pd.DataFrame({'word': target_pool[:8],
                                                  'file': [faces_table.loc[0, y] for y in practice_study_trials.source],
@@ -142,7 +146,50 @@ practice_study_trials = pd.concat([practice_study_trials,
                                    pd.DataFrame(np.full(shape=(practice_study_trials.shape[0], 4), fill_value=np.nan),
                                                 columns=['response', 'RT', 'correct', 'points'])],
                                   axis=1)
+# Put everything in a nice order
 practice_study_trials = practice_study_trials[['block', 'word', 'source', 'file', 'response', 'RT', 'correct', 'points']]
+practice_study_trials.set_index('block', drop=False)
+# Make the image stimuli
+face_stim = {'m': visual.ImageStim(win, image=faces_table.loc[0, 'm'], pos=(0, .4)),
+             'f': visual.ImageStim(win, image=faces_table.loc[0, 'f'], pos=(0, .4))
+             }
+# Make the text stimuli, but don't put the text in yet
+study_word = visual.TextStim(win, pos=(0, 0))
+
+# Make the source responses text
+source_response_opts = visual.TextStim(win, pos=(0, -.8), text="Z = Male                       / = Female")
+
+# Make the source question text
+source_question_text = visual.TextStim(win, pos=(0, .8), text="Did you study this word with a male or female face?")
+
+# Make the source points feedback
+source_points_feedback = visual.TextStim(win, pos=(0, -.2))
+
+# Study Practice Loop
+total_points = 0
+for b in practice_study_trials.index.unique(0):
+    block = practice_study_trials.loc[b]
+    # Show stimuli
+    for x in block.itertuples():
+        # Study
+        trials.draw_study_trial(x, face_stim, study_word)
+        win.flip()
+        core.wait(2)
+
+        # Blank screen ISI
+        win.flip()
+        core.wait(.5)
+
+        # Practice Test
+        x = x.sample(frac=1)
+        trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
+        win.flip()
+        response, RT, correct, points = trials.source_test_response(x, event)
+        x[['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+        total_points += points
+        source_points_feedback.text = str(points)
+        trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+
 # Close the window
 win.close()
 
