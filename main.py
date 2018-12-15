@@ -4,11 +4,10 @@ import trials
 import pandas as pd
 import numpy as np
 import glob
-import random
 
 
 # Create a window and mouse
-win = visual.Window([1500, 1100], monitor="testMonitor")
+win = visual.Window([1280, 768])
 mouse = event.Mouse()
 event.globalKeys.add(key='q', func=core.quit, name='shutdown')
 
@@ -53,11 +52,14 @@ To see how well guessing the "risky" option works, only choose the response show
 Press the Space Bar to begin the first practice round.
     """
 ]
-instructions = visual.TextStim(win, wrapWidth=1.75, height=.085)
-for i in intro_text:
-    instructions.text = i
-    instructions.draw()
+
+instructions = visual.TextStim(win, wrapWidth=1.75, height=.085, text=intro_text[0])
+instructions.draw()
+for i in range(len(intro_text)):
     win.flip()
+    if i < (len(intro_text)-1):
+        instructions.text = intro_text[i+1]
+        instructions.draw()
     event.waitKeys(keyList=['space'])
 
 # Create studied/unstudied "button" components
@@ -136,8 +138,7 @@ practice_study_trials = expand.expand_grid({'source': ['m', 'f'],
 # Replicate twice, to make 4 trials per block
 practice_study_trials = expand.replicate(practice_study_trials, 2, ignore_index=True)
 # Randomize the order of male/female sources in each block
-practice_study_trials = practice_study_trials.groupby('block').apply(lambda y: y.sample(frac=1))
-practice_study_trials = practice_study_trials.reset_index(drop=True)
+practice_study_trials = practice_study_trials.groupby('block').apply(lambda z: z.sample(frac=1)).reset_index(drop=True)
 # Add the words to study, chosen image file, and empty response variables to the conditions
 practice_study_trials = pd.concat([practice_study_trials,
                                    pd.DataFrame({'word': target_pool[:8],
@@ -148,7 +149,9 @@ practice_study_trials = pd.concat([practice_study_trials,
                                   axis=1)
 # Put everything in a nice order
 practice_study_trials = practice_study_trials[['block', 'word', 'source', 'file', 'response', 'RT', 'correct', 'points']]
-practice_study_trials.set_index('block', drop=False)
+practice_study_trials.set_index(['block', list(range(len(practice_study_trials)))],
+                                drop=False, inplace=True)
+
 # Make the image stimuli
 face_stim = {'m': visual.ImageStim(win, image=faces_table.loc[0, 'm'], pos=(0, .4)),
              'f': visual.ImageStim(win, image=faces_table.loc[0, 'f'], pos=(0, .4))
@@ -168,7 +171,7 @@ source_points_feedback = visual.TextStim(win, pos=(0, -.2))
 # Study Practice Loop
 total_points = 0
 for b in practice_study_trials.index.unique(0):
-    block = practice_study_trials.loc[b]
+    block = practice_study_trials.loc[[b]]
     # Show stimuli
     for x in block.itertuples():
         # Study
@@ -180,15 +183,28 @@ for b in practice_study_trials.index.unique(0):
         win.flip()
         core.wait(.5)
 
+    block = block.sample(frac=1)
+    for x in block.itertuples():
         # Practice Test
-        x = x.sample(frac=1)
         trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
         win.flip()
+
+        # Waiting for key response
         response, RT, correct, points = trials.source_test_response(x, event)
-        x[['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+        block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
         total_points += points
+
+        # Give the accuracy/point feedback
         source_points_feedback.text = str(points)
         trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+        win.flip()
+        core.wait(2)
+
+        # ISI
+        win.flip()
+        core.wait(.5)
+
+    practice_study_trials.update(block)
 
 # Close the window
 win.close()

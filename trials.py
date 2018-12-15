@@ -66,17 +66,17 @@ def draw_source_test(x, word, question, options):
 
 def source_test_response(x, event):
     timer.reset()
-    response_map = {'z': 'm', '/': 'f'}
+    response_map = {'z': 'm', 'slash': 'f'}
 
     pressed = []
-    while pressed is None:
-        pressed = event.getKeys(['z', '/'], timeStamped=timer)
+    while not pressed:
+        pressed = event.getKeys(['z', 'slash'], timeStamped=timer)
 
-    response = pressed[0][0]
-    RT = pressed[0][1]
-    correct = True if response_map[pressed[0][0]] == x.source else False
+    response = response_map[pressed[0][0]]
+    rt = pressed[0][1]
+    correct = True if response == x.source else False
     points = 2 if correct else -2
-    return response, RT, correct, points
+    return response, rt, correct, points
 
 
 def draw_source_feedback(x, points, *args):
