@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import glob
 
+biases = ['studied', 'unstudied']
 
 # Create a window and mouse
 win = visual.Window([1280, 768])
@@ -76,7 +77,7 @@ unstudied_rect = visual.Rect(win, units='pix', pos=[(a*b)/2 for a, b in zip(unst
 guess_points_text = visual.TextStim(win, pos=(0, .75))
 total_points_feedback = visual.TextStim(win, pos=(0, 0))
 
-bias_trials = expand.expand_grid({'safe': ['studied', 'unstudied'],
+bias_trials = expand.expand_grid({'safe': biases,
                                   'correct': ['studied', 'unstudied']
                                   })
 bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
@@ -205,6 +206,29 @@ for b in practice_study_trials.index.unique(0):
         core.wait(.5)
 
     practice_study_trials.update(block)
+
+# Creating Recognition Practice trials schema
+practice_recog_trials = pd.concat([practice_study_trials[['word']].reset_index(drop=True),
+                                   pd.Series(['studied']*len(practice_study_trials), name='studied')
+                                   ], axis=1
+                                  )
+practice_recog_trials = pd.concat([practice_recog_trials,
+                                   pd.DataFrame({'word': lure_pool[:len(practice_recog_trials)],
+                                                 'studied': ['unstudied']*len(practice_study_trials)})
+                                   ],
+                                  join_axes=[pd.Index(['word', 'studied'])],
+                                  ignore_index=True
+                                  )
+practice_recog_trials = practice_recog_trials.groupby('studied',group_keys=False)
+practice_recog_trials = practice_recog_trials.apply(lambda z:
+                                                    z.assign(safe=np.random.permutation(biases*(len(z)/len(biases))))
+                                                    )
+practice_recog_trials = practice_recog_trials.sample(frac=1).reset_index(drop=True)
+practice_recog_trials = practice_recog_trials.reindex(columns=practice_recog_trials.columns.tolist() +
+                                                              ['guess', 'guess_correct', 'guess_RT', 'guess_points',
+                                                               'recog', 'recog_correct', 'recog_RT', 'recog_points'
+                                                               ])
+
 
 # Close the window
 win.close()
