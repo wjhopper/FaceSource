@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import glob
 
-biases = ['studied', 'unstudied']
+biases = ['studied', 'unstudied'] # This should become an argument
 
 # Create a window and mouse
 win = visual.Window([1280, 768])
@@ -42,10 +42,14 @@ Press the Space Bar to move forward.
     """On each trial, the "safe" response will be shown in green text, and the "risky" response will be shown in red text.
     
 Let's start by getting some practice using the "safe" and "risky" response options. During this practice,  you'll \
-see only the "Studied" and "Not Studied" response options on the screen, but there won't be a test word. One \
-response will be the correct answer, but you won't be able to tell which one it is until after you choose. 
-    
-Make your guess by clicking on one of the options with the mouse. If you guess correctly, you earn points. If you \
+see only the "Studied" and "Not Studied" response options on the screen, but there won't be a test word.
+
+One response will be the correct answer, but you won't be able to tell which one it is until after you choose. 
+
+Press the Space Bar to move forward.
+    """,
+
+    """Make your guess by clicking on one of the options with the mouse. If you guess correctly, you earn points. If you \
 guess incorrectly, you'll lose points.
     
 To see how well guessing the "risky" option works, only choose the response shown in red during this practice round.
@@ -64,30 +68,31 @@ for i in range(len(intro_text)):
     event.waitKeys(keyList=['space'])
 
 # Create studied/unstudied "button" components
-studied = visual.TextStim(win, text="Studied", pos=(.75, .75))
-unstudied = visual.TextStim(win, text="Not Studied", pos=(-.75, .75))
-studied_rect = visual.Rect(win, units='pix', pos=[(a*b)/2 for a, b in zip(studied.pos, win.size)],
-                           width=studied.boundingBox[0] + 20, height=studied.boundingBox[1] + 20,
-                           )
-unstudied_rect = visual.Rect(win, units='pix', pos=[(a*b)/2 for a, b in zip(unstudied.pos, win.size)],
-                             width=unstudied.boundingBox[0] + 20, height=unstudied.boundingBox[1] + 20,
-                             )
+studied_guess = visual.TextStim(win, text="Studied", pos=(.75, .75))
+unstudied_guess = visual.TextStim(win, text="Not Studied", pos=(-.75, .75))
+studied_guess_rect = visual.Rect(win, units='pix', pos=[(a * b) / 2 for a, b in zip(studied_guess.pos, win.size)],
+                                 width=studied_guess.boundingBox[0] + 20, height=studied_guess.boundingBox[1] + 20,
+                                 )
+unstudied_guess_rect = visual.Rect(win, units='pix', pos=[(a * b) / 2 for a, b in zip(unstudied_guess.pos, win.size)],
+                                   width=unstudied_guess.boundingBox[0] + 20, height=unstudied_guess.boundingBox[1] + 20,
+                                   )
 
 # Text objects for displaying points earned feedback
 guess_points_text = visual.TextStim(win, pos=(0, .75))
 total_points_feedback = visual.TextStim(win, pos=(0, 0))
 
 bias_trials = expand.expand_grid({'safe': biases,
-                                  'correct': ['studied', 'unstudied']
+                                  'type': ['studied', 'unstudied']
                                   })
 bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
-bias_trials = bias_trials.sort_values(by=['correct', 'safe']).reset_index(drop=True)
+bias_trials = bias_trials.sort_values(by=['type', 'safe']).reset_index(drop=True)
 
 for practice_round in [1, 2]:
     if practice_round == 2:
         instructions.text = """
-You'll now do one more round of guessing practice. This time, guess the safe response shown in green every trial, and \
-see how many points you earn this time.
+You'll now do one more round of guessing practice.
+
+This time, guess the safe response shown in green every trial, and see how many points you earn guessing this way.
 
 Press the Space Bar to begin.
 """
@@ -99,13 +104,13 @@ Press the Space Bar to begin.
     bias_trials = bias_trials.sample(frac=1).reset_index(drop=True)
     for x in bias_trials.itertuples():
         # Display guess probe and collect mouse click response
-        trials.draw_guess_stimuli(x, studied, studied_rect, unstudied, unstudied_rect)
+        trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
         win.flip()
-        resp, trial_points = trials.guess_response(x, mouse, studied_rect, unstudied_rect)
+        resp, trial_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
         total_points += trial_points
 
         # Display points feedback with guess probe
-        trials.draw_guess_stimuli(x, studied, studied_rect, unstudied, unstudied_rect)
+        trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
         trials.points_feedback(guess_points_text, trial_points)
         win.flip()
         core.wait(1.5)
@@ -208,27 +213,93 @@ for b in practice_study_trials.index.unique(0):
     practice_study_trials.update(block)
 
 # Creating Recognition Practice trials schema
+# Create data frame with rows of targets
 practice_recog_trials = pd.concat([practice_study_trials[['word']].reset_index(drop=True),
-                                   pd.Series(['studied']*len(practice_study_trials), name='studied')
+                                   pd.Series(['studied']*len(practice_study_trials), name='type')
                                    ], axis=1
                                   )
+# Add rows of lures (unstudied)
 practice_recog_trials = pd.concat([practice_recog_trials,
                                    pd.DataFrame({'word': lure_pool[:len(practice_recog_trials)],
-                                                 'studied': ['unstudied']*len(practice_study_trials)})
+                                                 'type': ['unstudied']*len(practice_study_trials)})
                                    ],
-                                  join_axes=[pd.Index(['word', 'studied'])],
+                                  join_axes=[pd.Index(['word', 'type'])],
                                   ignore_index=True
                                   )
-practice_recog_trials = practice_recog_trials.groupby('studied',group_keys=False)
+# Assign items to bias conditions
+practice_recog_trials = practice_recog_trials.groupby('type', group_keys=False)
 practice_recog_trials = practice_recog_trials.apply(lambda z:
                                                     z.assign(safe=np.random.permutation(biases*(len(z)/len(biases))))
                                                     )
+# Shuffle trial order
 practice_recog_trials = practice_recog_trials.sample(frac=1).reset_index(drop=True)
+# Add empty columns for response variables
 practice_recog_trials = practice_recog_trials.reindex(columns=practice_recog_trials.columns.tolist() +
-                                                              ['guess', 'guess_correct', 'guess_RT', 'guess_points',
-                                                               'recog', 'recog_correct', 'recog_RT', 'recog_points'
-                                                               ])
+                                                      ['guess', 'guess_correct', 'guess_RT', 'guess_points',
+                                                       'recog', 'recog_correct', 'recog_RT', 'recog_points'
+                                                       ])
 
+# Creating visual stimuli for guess & recognition tests
+# Recognition response buttons
+studied_recog = visual.TextStim(win, text="Studied", pos=(.75, -.75))
+unstudied_recog = visual.TextStim(win, text="Not Studied", pos=(-.75, -.75))
+studied_recog_rect = visual.Rect(win, units='pix', pos=[(a * b) / 2 for a, b in zip(studied_recog.pos, win.size)],
+                                 width=studied_recog.boundingBox[0] + 20, height=studied_recog.boundingBox[1] + 20,
+                                 )
+unstudied_recog_rect = visual.Rect(win, units='pix', pos=[(a * b) / 2 for a, b in zip(unstudied_recog.pos, win.size)],
+                                   width=unstudied_recog.boundingBox[0] + 20, height=unstudied_recog.boundingBox[1] + 20,
+                                   )
+
+# Recognition points feedback
+recog_points_text = visual.TextStim(win, pos=(0, -.75))
+
+for x in practice_recog_trials.itertuples():
+
+    # Draw the guess response buttons
+    trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
+    win.flip()
+    # Collect guess responses
+    guess, guess_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
+    total_points += guess_points
+
+    # "Deactivate" the guess response buttons
+    for y in [studied_guess_rect, unstudied_guess_rect]:
+        y.opacity = .25
+    for y in [studied_guess, unstudied_guess]:
+        y.contrast = .25
+    trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
+    # Draw the recognition probes
+    trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
+    win.flip()
+    recog, recog_points = trials.guess_response(x, mouse, studied_recog_rect, unstudied_recog_rect)
+
+    # "Deactivate" the recognition response buttons
+    for y in [studied_recog_rect, unstudied_recog_rect]:
+        y.opacity = .25
+    for y in [studied_recog, unstudied_recog]:
+        y.contrast = .25
+    # Give the feedback
+    guess_points_text.text = str(guess_points)
+    recog_points_text.text = str(recog_points)
+    guess_points_text.draw()
+    recog_points_text.draw()
+    trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
+    trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
+    t = core.getTime()
+    win.flip()
+
+    # Save trial data
+    practice_recog_trials.loc[x.Index, ['guess', 'guess_points', 'recog', 'recog_points']] = \
+        [guess, guess_points, recog, recog_points]
+    # Reset opacity for all 'buttons'
+    for y in [studied_recog_rect, unstudied_recog_rect, studied_guess_rect, unstudied_guess_rect]:
+        y.opacity = 1
+    for y in [studied_recog, unstudied_recog, studied_guess, unstudied_guess]:
+        y.contrast = 1
+    core.wait(2 - (t - core.getTime()))
+
+    win.flip()
+    core.wait(.5)
 
 # Close the window
 win.close()

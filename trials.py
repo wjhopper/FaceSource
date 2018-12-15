@@ -31,11 +31,11 @@ def guess_response(factors, mouse, studied_rect, unstudied_rect):
     while mouse.getPressed()[0]:
         pass
 
-    if resp == factors.correct and resp == factors.safe:
+    if resp == factors.type and resp == factors.safe:
         points = 3
-    elif resp == factors.correct and resp != factors.safe:
+    elif resp == factors.type and resp != factors.safe:
         points = 1
-    elif resp != factors.correct and resp == factors.safe:
+    elif resp != factors.type and resp == factors.safe:
         points = -1
     else:
         points = -3
@@ -82,3 +82,9 @@ def source_test_response(x, event):
 def draw_source_feedback(x, points, *args):
     draw_study_trial(x, *args)
     points.draw()
+
+
+def draw_recog_stimuli(x, word, *args):
+    draw_guess_stimuli(x, *args)
+    word.text = x.word
+    word.draw()
