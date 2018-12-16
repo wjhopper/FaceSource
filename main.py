@@ -92,7 +92,7 @@ for practice_round in [1, 2]:
         instructions.text = """
 You'll now do one more round of guessing practice.
 
-This time, guess the safe response shown in green every trial, and see how many points you earn guessing this way.
+This time, guess the safe response shown in gre/en every trial, and see how many points you earn guessing this way.
 
 Press the Space Bar to begin.
 """
@@ -169,7 +169,8 @@ study_word = visual.TextStim(win, pos=(0, 0))
 source_response_opts = visual.TextStim(win, pos=(0, -.8), text="Z = Male                       / = Female")
 
 # Make the source question text
-source_question_text = visual.TextStim(win, pos=(0, .8), text="Did you study this word with a male or female face?")
+source_question_text = visual.TextStim(win, pos=(0, .8), text="Did you study this word with a male or female face?",
+                                       wrapWidth=1)
 
 # Make the source points feedback
 source_points_feedback = visual.TextStim(win, pos=(0, -.2))
@@ -298,6 +299,31 @@ for x in practice_recog_trials.itertuples():
         y.contrast = 1
     core.wait(2 - (t - core.getTime()))
 
+    win.flip()
+    core.wait(.5)
+
+# Source testing
+practice_source_test = practice_study_trials.copy()
+practice_source_test[['response', 'RT', 'correct', 'points']] = np.nan
+practice_source_test = practice_source_test.sample(frac=1)
+
+for x in practice_source_test.itertuples():
+    # Source test probe
+    trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
+    win.flip()
+
+    # Waiting for key response
+    response, RT, correct, points = trials.source_test_response(x, event)
+    total_points += points
+    practice_source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+
+    # # Give the accuracy/point feedback
+    # source_points_feedback.text = str(points)
+    # trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+    # win.flip()
+    # core.wait(2)
+
+    # Blank screen ISI
     win.flip()
     core.wait(.5)
 
