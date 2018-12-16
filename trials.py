@@ -1,5 +1,5 @@
 from psychopy.core import Clock
-
+from psychopy import visual
 timer = Clock()
 
 
@@ -88,3 +88,15 @@ def draw_recog_stimuli(x, word, *args):
     draw_guess_stimuli(x, *args)
     word.text = x.word
     word.draw()
+
+
+def give_instructions(win, event, text_list):
+
+    instructions = visual.TextStim(win, wrapWidth=1.75, height=.085, text=text_list[0])
+    instructions.draw()
+    for i in range(len(text_list)):
+        win.flip()
+        if i < (len(text_list) - 1):
+            instructions.text = text_list[i + 1]
+            instructions.draw()
+        event.waitKeys(keyList=['space'])
