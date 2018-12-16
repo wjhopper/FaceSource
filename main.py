@@ -104,6 +104,7 @@ Press the Space Bar to begin.
         win.flip()
         resp, trial_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
         total_points += trial_points
+        mouse.setVisible(0)
 
         # Display points feedback with guess probe
         trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
@@ -318,23 +319,29 @@ for x in practice_recog_trials.itertuples():
     for y in [studied_guess, unstudied_guess]:
         y.contrast = .25
     trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
+
     # Draw the recognition probes
     trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
     win.flip()
     recog, recog_points = trials.guess_response(x, mouse, studied_recog_rect, unstudied_recog_rect)
+    total_points += recog_points
 
     # "Deactivate" the recognition response buttons
     for y in [studied_recog_rect, unstudied_recog_rect]:
         y.opacity = .25
     for y in [studied_recog, unstudied_recog]:
         y.contrast = .25
+    trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
+    trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
+
+    mouse.setVisible(0)
+
     # Give the feedback
     guess_points_text.text = str(guess_points)
     recog_points_text.text = str(recog_points)
     guess_points_text.draw()
     recog_points_text.draw()
-    trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
-    trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
+
     t = core.getTime()
     win.flip()
 
