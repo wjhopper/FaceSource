@@ -138,6 +138,7 @@ lure_pool = words[104:(104+92)]  # 8 practice lures, 84 lures for real trials. 8
 practice_study_trials = expand.expand_grid({'source': ['m', 'f'],
                                             'block': list(range(1, 3)),
                                             })
+practice_study_trials.block = practice_study_trials.block.astype(np.int32)
 # Replicate twice, to make 4 trials per block
 practice_study_trials = expand.replicate(practice_study_trials, 2, ignore_index=True)
 # Randomize the order of male/female sources in each block
@@ -147,13 +148,16 @@ practice_study_trials = pd.concat([practice_study_trials,
                                    pd.DataFrame({'word': target_pool[:8],
                                                  'file': [faces_table.loc[0, y] for y in practice_study_trials.source],
                                                  }),
-                                   pd.DataFrame(np.full(shape=(practice_study_trials.shape[0], 4), fill_value=np.nan),
-                                                columns=['response', 'RT', 'correct', 'points'])],
+                                   pd.DataFrame(np.full(shape=(practice_study_trials.shape[0], 5), fill_value=np.nan),
+                                                columns=['response', 'RT', 'correct', 'points', 'test_order'])],
                                   axis=1)
 # Put everything in a nice order
-practice_study_trials = practice_study_trials[['block', 'word', 'source', 'file', 'response', 'RT', 'correct', 'points']]
+practice_study_trials = practice_study_trials[['block', 'word', 'source', 'file', 'response', 'RT', 'correct', 'points', 'test_order']]
 practice_study_trials.set_index(['block', list(range(len(practice_study_trials)))],
                                 drop=False, inplace=True)
+
+# Remove words chosen for practice from the target pool
+target_pool = target_pool[8:]
 
 # Make the image stimuli
 face_stim = {'m': visual.ImageStim(win, image=faces_table.loc[0, 'm'], pos=(0, .4)),
@@ -217,6 +221,7 @@ for b in practice_study_trials.index.unique(0):
         core.wait(.5)
 
     block = block.sample(frac=1)
+    block['test_order'] = list(range(1, len(block)+1))
     for x in block.itertuples():
         # Practice Test
         trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
@@ -253,6 +258,9 @@ practice_recog_trials = pd.concat([practice_recog_trials,
                                   join_axes=[pd.Index(['word', 'type'])],
                                   ignore_index=True
                                   )
+# Remove lures chosen for practice from the lure pool
+lure_pool = lure_pool[8:]
+
 # Assign items to bias conditions
 practice_recog_trials = practice_recog_trials.groupby('type', group_keys=False)
 practice_recog_trials = practice_recog_trials.apply(lambda z:
@@ -411,6 +419,66 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
 
 trials.give_instructions(win, event, begin_exp_instructions)
 
+# Create the study list
+# Cross the two sources and the 24 blocks
+study_trials = expand.expand_grid({'source': ['m', 'f'],
+                                   'block': list(range(1, 25)),
+                                   })
+study_trials.block = study_trials.block.astype(np.int32)
+# Replicate twice, to make 4 trials per block
+study_trials = expand.replicate(study_trials, 2, ignore_index=True)
+# Randomize the order of male/female sources in each block
+study_trials = study_trials.groupby('block').apply(lambda z: z.sample(frac=1)).reset_index(drop=True)
+# Add the words to study, chosen image file, and empty response variables to the conditions
+study_trials = pd.concat([study_trials,
+                          pd.DataFrame({'word': target_pool[:len(study_trials)],
+                                        'file': [faces_table.loc[1, y] for y in study_trials.source],
+                                        }),
+                          pd.DataFrame(np.full(shape=(len(study_trials), 5), fill_value=np.nan),
+                                       columns=['response', 'RT', 'correct', 'points', 'test_order'])],
+                         axis=1)
+# Put everything in a nice order
+study_trials = study_trials[['block', 'word', 'source', 'file', 'response', 'RT', 'correct', 'points', 'test_order']]
+study_trials.set_index(['block', list(range(len(study_trials)))],
+                       drop=False, inplace=True)
+
+# Study Practice Trials Loop
+total_points = 0
+for b in study_trials.index.unique(0):
+    block = study_trials.loc[[b]]
+    # Show stimuli
+    for x in block.itertuples():
+        # Study
+        trials.draw_study_trial(x, face_stim, study_word)
+        win.flip()
+        core.wait(2)
+
+        # Blank screen ISI
+        win.flip()
+        core.wait(.5)
+
+    block = block.sample(frac=1)
+    for x in block.itertuples():
+        # Practice Test
+        trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
+        win.flip()
+
+        # Waiting for key response
+        response, RT, correct, points = trials.source_test_response(x, event)
+        block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+        total_points += points
+
+        # Give the accuracy/point feedback
+        source_points_feedback.text = str(points)
+        trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+        win.flip()
+        core.wait(2)
+
+        # ISI
+        win.flip()
+        core.wait(.5)
+
+    study_trials.update(block)
 # Close the window
 win.close()
 
