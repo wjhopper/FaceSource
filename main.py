@@ -132,7 +132,7 @@ faces_table['f'] = np.random.permutation(faces_table['f'])
 with open('words.txt', 'r') as f:
     words = f.read().splitlines()
 target_pool = words[:104]  # 8 practice words, 96 words for real trials
-lure_pool = words[104:(104+92)]  # 8 practice lures, 84 lures for real trials. 84 because primacy/recency items are not tested
+lure_pool = words[104:(104+96)]  # 8 practice lures, 88 lures for real trials. 88 because primacy/recency items are not tested
 
 # Cross source and block
 practice_study_trials = expand.expand_grid({'source': ['m', 'f'],
@@ -397,15 +397,16 @@ for x in practice_source_test.itertuples():
     total_points += points
     practice_source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
 
-    # # Give the accuracy/point feedback
-    # source_points_feedback.text = str(points)
-    # trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
-    # win.flip()
-    # core.wait(2)
+    # Give accuracy feedback
+    source_points_feedback.text = str(points)
+    trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
+    trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+    win.flip()
+    core.wait(1)
 
     # Blank screen ISI
     win.flip()
-    core.wait(.5)
+    core.wait(.25)
 
 # Source Practice Instructions
 begin_exp_instructions = [
@@ -479,6 +480,149 @@ for b in study_trials.index.unique(0):
         core.wait(.5)
 
     study_trials.update(block)
+
+total_points_feedback.text = 'You earned %i points during the study list!\n\nPress the space bar to begin the word memory test.' % total_points
+total_points_feedback.draw()
+win.flip()
+event.waitKeys(keyList=['space'])
+
+# Creating Recognition trials schema
+# We need to drop the first and last block
+targets = study_trials.loc[range(2, study_trials.index.max()[0]), 'word']
+# Create data frame with rows of targets
+recog_trials = pd.concat([targets,
+                          pd.Series(['studied'] * len(targets), name='type', index=targets.index)
+                          ],
+                         axis=1
+                         )
+# Add rows of lures (unstudied)
+recog_trials = pd.concat([recog_trials,
+                          pd.DataFrame({'word': lure_pool[:len(recog_trials)],
+                                        'type': ['unstudied'] * len(recog_trials)},
+                                       index=recog_trials.index)
+                          ],
+                         join_axes=[pd.Index(['word', 'type'])]
+                         )
+
+# Assign items to bias conditions
+recog_trials = recog_trials.groupby('type', group_keys=False)
+recog_trials = recog_trials.apply(lambda z:
+                                  z.assign(safe=np.random.permutation(biases * (len(z) / len(biases))))
+                                  )
+# Begin the test with the second block of 4 words, but randomly order trials after that
+recog_trials = pd.concat([recog_trials.loc[[2]].reset_index(level=1, drop=True),
+                          recog_trials.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
+                          ]
+                         )
+# Add empty columns for response variables
+recog_trials = recog_trials.reindex(columns=recog_trials.columns.tolist() +
+                                    ['guess', 'guess_correct', 'guess_RT', 'guess_points',
+                                     'recog', 'recog_correct', 'recog_RT', 'recog_points'
+                                     ])
+
+for t in ['5', '4', '3', '2', '1']:
+    total_points_feedback.text = t
+    total_points_feedback.draw()
+    win.flip()
+    core.wait(1)
+
+for x in recog_trials.itertuples():
+
+    # Draw the guess response buttons
+    guess_reminder.draw()
+    trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
+    win.flip()
+    # Collect guess responses
+    guess, guess_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
+    total_points += guess_points
+
+    # "Deactivate" the guess response buttons
+    for y in [studied_guess_rect, unstudied_guess_rect]:
+        y.opacity = .25
+    for y in [studied_guess, unstudied_guess]:
+        y.contrast = .25
+    trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
+
+    # Draw the recognition probes
+    trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
+    win.flip()
+    recog, recog_points = trials.guess_response(x, mouse, studied_recog_rect, unstudied_recog_rect)
+    total_points += recog_points
+
+    # "Deactivate" the recognition response buttons
+    for y in [studied_recog_rect, unstudied_recog_rect]:
+        y.opacity = .25
+    for y in [studied_recog, unstudied_recog]:
+        y.contrast = .25
+    trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
+    trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
+
+    mouse.setVisible(0)
+
+    # Give the feedback
+    guess_points_text.text = str(guess_points)
+    recog_points_text.text = str(recog_points)
+    guess_points_text.draw()
+    recog_points_text.draw()
+
+    t = core.getTime()
+    win.flip()
+
+    # Save trial data
+    recog_trials.loc[x.Index, ['guess', 'guess_points', 'recog', 'recog_points']] = \
+        [guess, guess_points, recog, recog_points]
+    # Reset opacity for all 'buttons'
+    for y in [studied_recog_rect, unstudied_recog_rect, studied_guess_rect, unstudied_guess_rect]:
+        y.opacity = 1
+    for y in [studied_recog, unstudied_recog, studied_guess, unstudied_guess]:
+        y.contrast = 1
+    core.wait(2 - (t - core.getTime()))
+
+    win.flip()
+    core.wait(.5)
+
+total_points_feedback.text = 'You earned %i points during the word memory test!\n\nPress the space bar to begin the face memory test.' % total_points
+total_points_feedback.draw()
+win.flip()
+event.waitKeys(keyList=['space'])
+
+# Source testing
+source_test = study_trials.copy()
+# Again, begin the test with the second block of 4 words, but randomly order trials after that
+recog_trials = pd.concat([source_test.loc[[2]].reset_index(level=1, drop=True),
+                          source_test.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
+                          ]
+                         )
+source_test[['response', 'RT', 'correct', 'points']] = np.nan
+
+# Begin Source Test Countdown
+for t in ['5', '4', '3', '2', '1']:
+    total_points_feedback.text = t
+    total_points_feedback.draw()
+    win.flip()
+    core.wait(1)
+
+for x in practice_source_test.itertuples():
+    # Source test probe
+    trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
+    win.flip()
+
+    # Waiting for key response
+    response, RT, correct, points = trials.source_test_response(x, event)
+    total_points += points
+    practice_source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+
+    # Give the accuracy/point feedback
+    source_points_feedback.text = str(points)
+    trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
+    trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+    win.flip()
+    core.wait(1)
+
+    # Blank screen ISI
+    win.flip()
+    core.wait(.25)
+
 # Close the window
 win.close()
 

@@ -103,3 +103,4 @@ def give_instructions(win, event, text_list):
             instructions.text = text_list[i + 1]
             instructions.draw()
         event.waitKeys(keyList=['space'])
+
