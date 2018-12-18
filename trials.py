@@ -52,11 +52,12 @@ def points_feedback(text, points):
     text.draw()
 
 
-def draw_study_trial(x, faces, word):
+def draw_study_trial(x, word, faces=None):
 
     word.text = x.word
     word.draw()
-    faces[x.source].draw()
+    if faces is not None:
+        faces[x.source].draw()
 
 
 def draw_source_test(x, word, question, options):
@@ -83,7 +84,8 @@ def source_test_response(x, event):
 
 
 def draw_source_feedback(x, points, *args):
-    draw_study_trial(x, *args)
+    if args is not None:
+        draw_study_trial(x, *args)
     points.draw()
 
 

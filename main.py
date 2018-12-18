@@ -88,6 +88,7 @@ bias_trials = expand.expand_grid({'safe': biases,
 bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
 bias_trials = bias_trials.sort_values(by=['type', 'safe']).reset_index(drop=True)
 
+# # GUESSING PRACTICE
 for practice_round in [1, 2]:
     if practice_round == 2:
         guess_instructions = ["""
@@ -216,7 +217,7 @@ for b in practice_study_trials.index.unique(0):
     # Show stimuli
     for x in block.itertuples():
         # Study
-        trials.draw_study_trial(x, face_stim, study_word)
+        trials.draw_study_trial(x,  study_word, face_stim)
         win.flip()
         core.wait(2)
 
@@ -238,7 +239,7 @@ for b in practice_study_trials.index.unique(0):
         # Give the accuracy/point feedback
         total_points += points
         source_points_feedback.text = str(points)
-        trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+        trials.draw_source_feedback(x, source_points_feedback, study_word, face_stim)
         win.flip()
         core.wait(2)
 
@@ -372,7 +373,6 @@ for x in practice_recog_trials.itertuples():
     for y in [studied_recog, unstudied_recog, studied_guess, unstudied_guess]:
         y.contrast = 1
 
-
     core.wait(.5 - (t - core.getTime()))
 
 # Source testing
@@ -409,7 +409,7 @@ for x in practice_source_test.itertuples():
     # Give accuracy feedback
     source_points_feedback.text = str(points)
     trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
-    trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+    trials.draw_source_feedback(x, source_points_feedback, study_word)
     win.flip()
     core.wait(1)
 
@@ -459,7 +459,7 @@ for b in study_trials.index.unique(0):
     # Show stimuli
     for x in block.itertuples():
         # Study
-        trials.draw_study_trial(x, face_stim, study_word)
+        trials.draw_study_trial(x, study_word, face_stim)
         win.flip()
         core.wait(2)
 
@@ -480,7 +480,7 @@ for b in study_trials.index.unique(0):
 
         # Give the accuracy/point feedback
         source_points_feedback.text = str(points)
-        trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+        trials.draw_source_feedback(x, source_points_feedback, study_word, face_stim)
         win.flip()
         core.wait(2)
 
@@ -617,7 +617,7 @@ for t in ['5', '4', '3', '2', '1']:
     win.flip()
     core.wait(1)
 
-for x in practice_source_test.itertuples():
+for x in source_test.itertuples():
     # Source test probe
     trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
     win.flip()
@@ -625,12 +625,12 @@ for x in practice_source_test.itertuples():
     # Waiting for key response
     response, RT, correct, points = trials.source_test_response(x, event)
     total_points += points
-    practice_source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+    source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
 
     # Give the accuracy/point feedback
     source_points_feedback.text = str(points)
     trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
-    trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
+    trials.draw_source_feedback(x, source_points_feedback, study_word)
     win.flip()
     core.wait(1)
 
