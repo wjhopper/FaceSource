@@ -75,6 +75,10 @@ unstudied_guess_rect = visual.Rect(win, units='pix', pos=[(a * b) / 2 for a, b i
 guess_points_text = visual.TextStim(win, pos=(0, .75))
 total_points_feedback = visual.TextStim(win, pos=(0, 0))
 
+# "Big Loss" Warning
+big_loss = visual.TextStim(win, pos=(0, 0), text="Big Loss! Careful using the risky option", color="red", height=.15,
+                           wrapWidth=1.25)
+
 # "Make a guess" reminder instructions
 guess_reminder = visual.TextStim(win, pos=(0, .75), text="Make a guess")
 
@@ -230,9 +234,9 @@ for b in practice_study_trials.index.unique(0):
         # Waiting for key response
         response, RT, correct, points = trials.source_test_response(x, event)
         block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
-        total_points += points
 
         # Give the accuracy/point feedback
+        total_points += points
         source_points_feedback.text = str(points)
         trials.draw_source_feedback(x, source_points_feedback, face_stim, study_word)
         win.flip()
@@ -349,10 +353,16 @@ for x in practice_recog_trials.itertuples():
     recog_points_text.text = str(recog_points)
     guess_points_text.draw()
     recog_points_text.draw()
+    win.flip()
+    core.wait(2)
+
+    if guess_points + recog_points == -6:
+        big_loss.draw()
+        win.flip()
+        core.wait(2)
 
     t = core.getTime()
     win.flip()
-
     # Save trial data
     practice_recog_trials.loc[x.Index, ['guess', 'guess_points', 'recog', 'recog_points']] = \
         [guess, guess_points, recog, recog_points]
@@ -361,10 +371,9 @@ for x in practice_recog_trials.itertuples():
         y.opacity = 1
     for y in [studied_recog, unstudied_recog, studied_guess, unstudied_guess]:
         y.contrast = 1
-    core.wait(2 - (t - core.getTime()))
 
-    win.flip()
-    core.wait(.5)
+
+    core.wait(.5 - (t - core.getTime()))
 
 # Source testing
 practice_source_test = practice_study_trials.copy()
@@ -564,10 +573,16 @@ for x in recog_trials.itertuples():
     recog_points_text.text = str(recog_points)
     guess_points_text.draw()
     recog_points_text.draw()
+    win.flip()
+    core.wait(2)
+
+    if guess_points + recog_points == -6:
+        big_loss.draw()
+        win.flip()
+        core.wait(2)
 
     t = core.getTime()
     win.flip()
-
     # Save trial data
     recog_trials.loc[x.Index, ['guess', 'guess_points', 'recog', 'recog_points']] = \
         [guess, guess_points, recog, recog_points]
@@ -579,7 +594,7 @@ for x in recog_trials.itertuples():
     core.wait(2 - (t - core.getTime()))
 
     win.flip()
-    core.wait(.5)
+    core.wait(.5 - (t - core.getTime()))
 
 total_points_feedback.text = 'You earned %i points during the word memory test!\n\nPress the space bar to begin the face memory test.' % total_points
 total_points_feedback.draw()
