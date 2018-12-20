@@ -610,7 +610,7 @@ def run(subject=None, biases=('studied', 'unstudied')):
     # Source testing
     source_test = study_trials.copy()
     # Again, begin the test with the second block of 4 words, but randomly order trials after that
-    recog_trials = pd.concat([source_test.loc[[2]].reset_index(level=1, drop=True),
+    source_test = pd.concat([source_test.loc[[2]].reset_index(level=1, drop=True),
                               source_test.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
                               ]
                              )
