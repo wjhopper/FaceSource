@@ -6,9 +6,11 @@ import numpy as np
 import glob
 import uuid
 import argparse
+import random
+import os
 
 
-def run(subject=None, biases=('studied', 'unstudied')):
+def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
 
     if subject is None:
         subject = uuid.uuid4()
@@ -88,7 +90,7 @@ def run(subject=None, biases=('studied', 'unstudied')):
     # "Make a guess" reminder instructions
     guess_reminder = visual.TextStim(win, pos=(0, .75), text="Make a guess")
 
-    bias_trials = expand.expand_grid({'safe': biases,
+    bias_trials = expand.expand_grid({'safe': bias,
                                       'type': ['studied', 'unstudied']
                                       })
     bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
@@ -140,10 +142,10 @@ def run(subject=None, biases=('studied', 'unstudied')):
     faces_table['f'] = np.random.permutation(faces_table['f'])
 
     # Set up target and lure word pools
-    with open('words.txt', 'r') as f:
-        words = f.read().splitlines()
-    target_pool = words[:104]  # 8 practice words, 96 words for real trials
-    lure_pool = words[104:(104+96)]  # 8 practice lures, 88 lures for real trials. 88 because primacy/recency items are not tested
+    n_targets = 8 + n_items  # 8 practice words, 96 words (default) for real trials
+    n_lures = (8 + n_items - 8) # 8 practice lures, 8 fewer lures than targer for real trials because 4 primacy and recency items are not tested
+    target_pool = words[:n_targets]
+    lure_pool = words[n_targets:(n_targets + n_lures)]
 
     # Cross source and block
     practice_study_trials = expand.expand_grid({'source': ['m', 'f'],
@@ -239,8 +241,8 @@ def run(subject=None, biases=('studied', 'unstudied')):
             win.flip()
 
             # Waiting for key response
-            response, RT, correct, points = trials.source_test_response(x, event)
-            block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+            response, rt, correct, points = trials.source_test_response(x, event)
+            block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, rt, correct, points]
 
             # Give the accuracy/point feedback
             total_points += points
@@ -275,7 +277,7 @@ def run(subject=None, biases=('studied', 'unstudied')):
     # Assign items to bias conditions
     practice_recog_trials = practice_recog_trials.groupby('type', group_keys=False)
     practice_recog_trials = practice_recog_trials.apply(lambda z:
-                                                        z.assign(safe=np.random.permutation(biases*(len(z)/len(biases))))
+                                                        z.assign(safe=np.random.permutation(bias * (len(z) / len(bias))))
                                                         )
     # Shuffle trial order
     practice_recog_trials = practice_recog_trials.sample(frac=1).reset_index(drop=True)
@@ -408,9 +410,9 @@ def run(subject=None, biases=('studied', 'unstudied')):
         win.flip()
 
         # Waiting for key response
-        response, RT, correct, points = trials.source_test_response(x, event)
+        response, rt, correct, points = trials.source_test_response(x, event)
         total_points += points
-        practice_source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+        practice_source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, rt, correct, points]
 
         # Give accuracy feedback
         source_points_feedback.text = str(points)
@@ -480,8 +482,8 @@ def run(subject=None, biases=('studied', 'unstudied')):
             win.flip()
 
             # Waiting for key response
-            response, RT, correct, points = trials.source_test_response(x, event)
-            block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+            response, rt, correct, points = trials.source_test_response(x, event)
+            block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, rt, correct, points]
             total_points += points
 
             # Give the accuracy/point feedback
@@ -522,7 +524,7 @@ def run(subject=None, biases=('studied', 'unstudied')):
     # Assign items to bias conditions
     recog_trials = recog_trials.groupby('type', group_keys=False)
     recog_trials = recog_trials.apply(lambda z:
-                                      z.assign(safe=np.random.permutation(biases * (len(z) / len(biases))))
+                                      z.assign(safe=np.random.permutation(bias * (len(z) / len(bias))))
                                       )
     # Begin the test with the second block of 4 words, but randomly order trials after that
     recog_trials = pd.concat([recog_trials.loc[[2]].reset_index(level=1, drop=True),
@@ -611,9 +613,8 @@ def run(subject=None, biases=('studied', 'unstudied')):
     source_test = study_trials.copy()
     # Again, begin the test with the second block of 4 words, but randomly order trials after that
     source_test = pd.concat([source_test.loc[[2]].reset_index(level=1, drop=True),
-                              source_test.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
-                              ]
-                             )
+                             source_test.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
+                             ])
     source_test[['response', 'RT', 'correct', 'points']] = np.nan
 
     # Begin Source Test Countdown
@@ -629,9 +630,9 @@ def run(subject=None, biases=('studied', 'unstudied')):
         win.flip()
 
         # Waiting for key response
-        response, RT, correct, points = trials.source_test_response(x, event)
+        response, rt, correct, points = trials.source_test_response(x, event)
         total_points += points
-        source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, RT, correct, points]
+        source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, rt, correct, points]
 
         # Give the accuracy/point feedback
         source_points_feedback.text = str(points)
@@ -652,9 +653,45 @@ def run(subject=None, biases=('studied', 'unstudied')):
 
 
 if __name__ == "__main__":
+    if not os.path.exists('data') and not os.path.isfile('data'):
+        os.mkdir('data')
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--subject", help="Manually set the subject ID. Useful if you want to impose a numerical sequence of subject IDs as generated \
-                                          from an external source.  Value is treated as a string internally. If unset, a type 4 UUID is generated for the subject ID")
-    parser.add_argument("--bias", help="Bias. Choose within or between subjects")
-    parser.parse_args()
-    run()
+    parser.add_argument("--subject",
+                        help="Manually set the subject ID. Useful if you want to impose a numerical sequence of subject IDs as generated \
+                              from an external source.  Value is treated as a string internally. If unset, a type 4 UUID is generated for the subject ID",
+                        default=str(uuid.uuid4()))
+    bias_options = ['studied', 'unstudied']
+    parser.add_argument("--bias",
+                        help="Choose within or between subjects manipulation of which response option is safe, or manually set \
+                             the \"studied\" or \"unstudied\" response to be the safe one.",
+                        default='between',
+                        choices=['between', 'within'] + bias_options
+                        )
+    parser.add_argument("--n_items",
+                        help="How many words should be studied. Minimum 12, maximum 548. Value must be a multiple of 4.",
+                        default=96, type=int,
+                        )
+    parser.add_argument("--words",
+                        help="Path to plain text file containing word stimuli. Each word should be on its own line. \
+                             Converted to an absolute path, if necessary",
+                        default='words.txt'
+                        )
+    args = parser.parse_args()
+
+    if args.bias == 'between':
+        args.bias = random.sample(bias_options, 1)
+    elif args.bias == 'within':
+        args.bias = bias_options
+
+    if args.n_items % 4 != 0:
+        ValueError('nItems argument value must be a multiple of 4')
+
+    if not os.path.isabs(args.words):
+        args.words = os.path.abspath(args.words)
+
+    with open(args.words, 'r') as f:
+        words = f.read().splitlines()
+
+    print(args)
+    run(words=words, subject=args.subject, bias=args.bias, n_items=args.n_items)
