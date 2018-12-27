@@ -122,7 +122,7 @@ Press the Space Bar to begin.
             guess_reminder.draw()
             trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
             win.flip()
-            resp, trial_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
+            resp, rt, trial_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
             total_points += trial_points
             mouse.setVisible(0)
 
@@ -292,8 +292,8 @@ Press the Space Bar to move forward.
     practice_recog_trials = practice_recog_trials.sample(frac=1).reset_index(drop=True)
     # Add empty columns for response variables
     practice_recog_trials = practice_recog_trials.reindex(columns=practice_recog_trials.columns.tolist() +
-                                                          ['guess', 'guess_correct', 'guess_RT', 'guess_points',
-                                                           'recog', 'recog_correct', 'recog_RT', 'recog_points'
+                                                          ['guess', 'guess_RT', 'guess_points',
+                                                           'recog', 'recog_RT', 'recog_points'
                                                            ])
 
     # Creating visual stimuli for guess & recognition tests
@@ -339,7 +339,7 @@ Press the Space Bar to begin the memory test
         trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
         win.flip()
         # Collect guess responses
-        guess, guess_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
+        guess, guess_rt, guess_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
         total_points += guess_points
 
         # "Deactivate" the guess response buttons
@@ -352,7 +352,7 @@ Press the Space Bar to begin the memory test
         # Draw the recognition probes
         trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
         win.flip()
-        recog, recog_points = trials.guess_response(x, mouse, studied_recog_rect, unstudied_recog_rect)
+        recog, recog_rt, recog_points = trials.guess_response(x, mouse, studied_recog_rect, unstudied_recog_rect)
         total_points += recog_points
 
         # "Deactivate" the recognition response buttons
@@ -381,8 +381,8 @@ Press the Space Bar to begin the memory test
         t = core.getTime()
         win.flip()
         # Save trial data
-        practice_recog_trials.loc[x.Index, ['guess', 'guess_points', 'recog', 'recog_points']] = \
-            [guess, guess_points, recog, recog_points]
+        practice_recog_trials.loc[x.Index, ['guess', 'guess_RT', 'guess_points', 'recog', 'recog_RT', 'recog_points']] = \
+            [guess, guess_rt, guess_points, recog, recog_rt, recog_points]
         # Reset opacity for all 'buttons'
         for y in [studied_recog_rect, unstudied_recog_rect, studied_guess_rect, unstudied_guess_rect]:
             y.opacity = 1
@@ -543,8 +543,8 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
 
     # Add empty columns for response variables
     recog_trials = recog_trials.reindex(columns=recog_trials.columns.tolist() +
-                                        ['guess', 'guess_correct', 'guess_RT', 'guess_points',
-                                         'recog', 'recog_correct', 'recog_RT', 'recog_points'
+                                        ['guess', 'guess_RT', 'guess_points',
+                                         'recog', 'recog_RT', 'recog_points'
                                          ])
     if total_points < max_points:
 
@@ -568,7 +568,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
         trials.draw_guess_stimuli(x, studied_guess, studied_guess_rect, unstudied_guess, unstudied_guess_rect)
         win.flip()
         # Collect guess responses
-        guess, guess_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
+        guess, guess_rt, guess_points = trials.guess_response(x, mouse, studied_guess_rect, unstudied_guess_rect)
         total_points += guess_points
 
         # "Deactivate" the guess response buttons
@@ -581,7 +581,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
         # Draw the recognition probes
         trials.draw_recog_stimuli(x, study_word, studied_recog, studied_recog_rect, unstudied_recog, unstudied_recog_rect)
         win.flip()
-        recog, recog_points = trials.guess_response(x, mouse, studied_recog_rect, unstudied_recog_rect)
+        recog, recog_rt, recog_points = trials.guess_response(x, mouse, studied_recog_rect, unstudied_recog_rect)
         total_points += recog_points
 
         # "Deactivate" the recognition response buttons
@@ -610,8 +610,8 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
         t = core.getTime()
         win.flip()
         # Save trial data
-        recog_trials.loc[x.Index, ['guess', 'guess_points', 'recog', 'recog_points']] = \
-            [guess, guess_points, recog, recog_points]
+        recog_trials.loc[x.Index, ['guess', 'guess_RT', 'guess_points', 'recog', 'recog_RT', 'recog_points']] = \
+            [guess, guess_rt, guess_points, recog, recog_rt, recog_points]
         # Reset opacity for all 'buttons'
         for y in [studied_recog_rect, unstudied_recog_rect, studied_guess_rect, unstudied_guess_rect]:
             y.opacity = 1

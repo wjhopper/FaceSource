@@ -23,11 +23,14 @@ def guess_response(factors, mouse, studied_rect, unstudied_rect):
     mouse.setPos((0, -.1))  # Return mouse to near center
     mouse.setVisible(1)
 
+    timer.reset()
     resp = None
     while resp is None:
         if mouse.isPressedIn(studied_rect, [0]):
+            rt = timer.getTime()
             resp = 'studied'
         if mouse.isPressedIn(unstudied_rect, [0]):
+            rt = timer.getTime()
             resp = 'unstudied'
 
     # Wait until the mouse is no longer pressed, by doing nothing as long as it is pressed
@@ -43,7 +46,7 @@ def guess_response(factors, mouse, studied_rect, unstudied_rect):
     else:
         points = -3
 
-    return resp, points
+    return resp, rt, points
 
 
 def points_feedback(text, points):
