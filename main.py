@@ -482,6 +482,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
             core.wait(.5)
 
         block = block.sample(frac=1)
+        block['test_order'] = list(range(1, len(block) + 1))
         for x in block.itertuples():
             # Practice Test
             trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
