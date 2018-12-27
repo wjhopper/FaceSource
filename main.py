@@ -101,8 +101,7 @@ Press the Space Bar to begin the first practice round.
     bias_trials = expand.expand_grid({'safe': bias,
                                       'type': ['studied', 'unstudied']
                                       })
-    bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
-    bias_trials = bias_trials.sort_values(by=['type', 'safe']).reset_index(drop=True)
+    bias_trials = expand.replicate(bias_trials, 8/len(bias_trials), ignore_index=True)
     total_points = 0
 
     # GUESSING PRACTICE
