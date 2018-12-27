@@ -102,17 +102,18 @@ Press the Space Bar to begin the first practice round.
                                       'type': ['studied', 'unstudied']
                                       })
     bias_trials = expand.replicate(bias_trials, 8/len(bias_trials), ignore_index=True)
-    total_points = 0
 
-    # GUESSING PRACTICE
-    for practice_round in [1, 2]:
-        if practice_round == 2:
-            guess_instructions = ["""You'll now do one more round of guessing practice.
+    guess_instructions = ["""You'll now do one more round of guessing practice.
 
 This time, guess the safe response shown in green every trial, and see how many points you earn guessing this way.
 
 Press the Space Bar to begin.
 """]
+
+    # GUESSING PRACTICE
+    total_points = 0
+    for practice_round in [1, 2]:
+        if practice_round == 2:
             trials.give_instructions(win, event, guess_instructions)
 
         bias_trials = bias_trials.sample(frac=1).reset_index(drop=True)
@@ -135,10 +136,10 @@ Press the Space Bar to begin.
             win.flip()
             core.wait(.5)
 
-    total_points_feedback.text = 'You earned %i points.\n\nPress the space bar to continue.' % total_points
-    total_points_feedback.draw()
-    win.flip()
-    event.waitKeys(keyList=['space'])
+        total_points_feedback.text = 'You earned %i points.\n\nPress the space bar to continue.' % total_points
+        total_points_feedback.draw()
+        win.flip()
+        event.waitKeys(keyList=['space'])
 
     # Set up pool of face-source stimuli files
     faces_table = pd.DataFrame({'m': glob.glob("faces/m[1-8].bmp"),
