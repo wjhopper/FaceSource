@@ -626,7 +626,9 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     source_test = pd.concat([source_test.loc[[2]].reset_index(level=1, drop=True),
                              source_test.loc[3:source_test.index.get_level_values('block').max()-1].sample(frac=1).reset_index(level=1, drop=True)
                              ])
+    # Blank out response variables
     source_test[['response', 'RT', 'correct', 'points']] = np.nan
+    source_test = source_test.drop(columns='test_order') # row number is test order here, so we can remove this column
 
     # Add a trial number index
     source_test['trial'] = range(1, len(source_test)+1)
