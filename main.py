@@ -14,13 +14,18 @@ import os
 random.seed()
 
 
-def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
+def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96, fullscreen=False):
 
     if subject is None:
         subject = uuid.uuid4()
 
-    # Create a window and mouse
-    win = visual.Window([1280, 768])
+    # Create a window
+    if fullscreen:
+        win = visual.Window(fullscr=True)
+    else:
+        win = visual.Window([1280, 768])
+
+    # Create a mouse object
     mouse = event.Mouse()
     event.globalKeys.add(key='q', func=core.quit, name='shutdown')
 
@@ -701,6 +706,8 @@ if __name__ == "__main__":
                              Converted to an absolute path, if necessary",
                         default='words.txt'
                         )
+    parser.add_argument("--fullscreen", help="If included, open a fullscreen PsychoPy window. Otherwise, open a 1280x768 window",
+                        default=False, action="store_true")
     args = parser.parse_args()
 
     if args.bias == 'between':
@@ -720,4 +727,4 @@ if __name__ == "__main__":
     with open(args.words, 'r') as f:
         words = f.read().splitlines()
 
-    run(words=words, subject=args.subject, bias=args.bias, n_items=args.n_items)
+    run(words=words, subject=args.subject, bias=args.bias, n_items=args.n_items, fullscreen=args.fullscreen)
