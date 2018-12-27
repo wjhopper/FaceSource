@@ -99,6 +99,7 @@ Press the Space Bar to begin the first practice round.
     bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
     bias_trials = bias_trials.sort_values(by=['type', 'safe']).reset_index(drop=True)
     total_points = 0
+
     # GUESSING PRACTICE
     for practice_round in [1, 2]:
         if practice_round == 2:
@@ -144,7 +145,7 @@ Press the Space Bar to begin.
 
     # Set up target and lure word pools
     n_targets = 8 + n_items  # 8 practice words, 96 words (default) for real trials
-    n_lures = (8 + n_items - 8) # 8 practice lures, 8 fewer lures than targer for real trials because 4 primacy and recency items are not tested
+    n_lures = (8 + n_items - 8)  # 8 practice lures, 8 fewer lures than targer for real trials because 4 primacy and recency items are not tested
     target_pool = words[:n_targets]
     lure_pool = words[n_targets:(n_targets + n_lures)]
 
@@ -532,6 +533,10 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
                               recog_trials.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
                               ]
                              )
+    # Add a trial number index
+    recog_trials['trial'] = range(1, len(recog_trials)+1)
+    recog_trials = recog_trials.set_index('trial', append=True)
+
     # Add empty columns for response variables
     recog_trials = recog_trials.reindex(columns=recog_trials.columns.tolist() +
                                         ['guess', 'guess_correct', 'guess_RT', 'guess_points',
@@ -617,6 +622,10 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
                              source_test.loc[3:source_test.index.get_level_values('block').max()-1].sample(frac=1).reset_index(level=1, drop=True)
                              ])
     source_test[['response', 'RT', 'correct', 'points']] = np.nan
+
+    # Add a trial number index
+    source_test['trial'] = range(1, len(source_test)+1)
+    source_test = source_test.set_index('trial', append=True)
 
     # Begin Source Test Countdown
     for t in ['5', '4', '3', '2', '1']:
