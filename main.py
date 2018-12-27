@@ -10,6 +10,10 @@ import random
 import os
 
 
+# Ensure Python's RNG is seeded with current time
+random.seed()
+
+
 def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
 
     if subject is None:
@@ -168,6 +172,8 @@ Press the Space Bar to begin.
 
     # Remove words chosen for practice from the target pool
     target_pool = target_pool[8:]
+    # Shuffle the target pool
+    random.shuffle(target_pool)
 
     # Make the image stimuli
     face_stim = {'m': visual.ImageStim(win, image=faces_table.loc[0, 'm'], pos=(0, .4)),
@@ -268,6 +274,8 @@ Press the Space Bar to move forward.
                                       )
     # Remove lures chosen for practice from the lure pool
     lure_pool = lure_pool[8:]
+    # Shuffle remaining lure pool
+    random.shuffle(lure_pool)
 
     # Assign items to bias conditions
     practice_recog_trials = practice_recog_trials.groupby('type', group_keys=False)
