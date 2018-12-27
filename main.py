@@ -497,7 +497,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     event.waitKeys(keyList=['space'])
 
     # Creating Recognition trials schema
-    # We need to drop the first and last block
+    # We need to drop the first and last block, so we select items from the second and second-to-last blocks
     targets = study_trials.loc[range(2, study_trials.index.max()[0]), 'word']
     # Create data frame with rows of targets
     recog_trials = pd.concat([targets,
@@ -606,7 +606,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     source_test = study_trials.copy()
     # Again, begin the test with the second block of 4 words, but randomly order trials after that
     source_test = pd.concat([source_test.loc[[2]].reset_index(level=1, drop=True),
-                             source_test.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
+                             source_test.loc[3:source_test.index.get_level_values('block').max()-1].sample(frac=1).reset_index(level=1, drop=True)
                              ])
     source_test[['response', 'RT', 'correct', 'points']] = np.nan
 
