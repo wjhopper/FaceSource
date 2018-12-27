@@ -22,49 +22,48 @@ def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
 
     intro_text = [
         """Welcome to the experiment! In this experiment, you'll study a list of words to remember, and take two memory tests \
-    afterwards.
+afterwards.
+
+On the first test, you will be shown a word, and have to indicate if you studied the word during this experiment, or \
+did not study it. You will earn points based on your performance on this test.
         
-    On the first test, you will be shown a word, and have to indicate if you studied the word during this experiment, or \
-    did not study it. You will earn points based on your performance on this test.
+You should try to earn as many points as possible. The experiment will end when you complete the entire test OR when \
+you earn 700 points, whichever comes first. 
         
-    You should try to earn as many points as possible. The experiment will end when you complete the entire test OR when \
-    you earn 700 points, whichever comes first. 
-        
-    Press the Space Bar to move forward.
-        """,
+Press the Space Bar to move forward.
+""",
 
         """On each test trial, one response will be "safe", and the other response will be "risky". "Safe" and "Risky" \
-    responses earn you different amounts of points.
+responses earn you different amounts of points.
         
-    If you choose a safe response, and it is the correct answer, you will earn 3 points.
+If you choose a safe response, and it is the correct answer, you will earn 3 points.
         
-    If you choose a risky response, and it is the correct answer, you will only earn 1 point.
+If you choose a risky response, and it is the correct answer, you will only earn 1 point.
         
-    If you choose a safe response, and it is the wrong answer, you will only lose one point.
+If you choose a safe response, and it is the wrong answer, you will only lose one point.
         
-    If you choose a risky response, and it is the wrong answer, you will lose 3 points.
+If you choose a risky response, and it is the wrong answer, you will lose 3 points.
         
-    Press the Space Bar to move forward.
-        """,
+Press the Space Bar to move forward.
+""",
 
         """On each trial, the "safe" response will be shown in green text, and the "risky" response will be shown in red text.
         
-    Let's start by getting some practice using the "safe" and "risky" response options. During this practice,  you'll \
-    see only the "Studied" and "Not Studied" response options on the screen, but there won't be a test word.
+Let's start by getting some practice using the "safe" and "risky" response options. During this practice,  you'll \
+see only the "Studied" and "Not Studied" response options on the screen, but there won't be a test word.
     
-    One response will be the correct answer, but you won't be able to tell which one it is until after you choose. 
+One response will be the correct answer, but you won't be able to tell which one it is until after you choose. 
     
-    Press the Space Bar to move forward.
-        """,
+Press the Space Bar to move forward.
+""",
 
         """Make your guess by clicking on one of the options with the mouse. If you guess correctly, you earn points. If you \
-    guess incorrectly, you'll lose points.
+guess incorrectly, you'll lose points.
         
-    To see how well guessing the "risky" option works, only choose the response shown in red during this practice round.
+To see how well guessing the "risky" option works, only choose the response shown in red during this practice round.
     
-    Press the Space Bar to begin the first practice round.
-        """
-    ]
+Press the Space Bar to begin the first practice round.
+"""]
 
     # Give intro instructions
     trials.give_instructions(win, event, intro_text)
@@ -95,20 +94,18 @@ def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
                                       })
     bias_trials = expand.replicate(bias_trials, 2, ignore_index=True)
     bias_trials = bias_trials.sort_values(by=['type', 'safe']).reset_index(drop=True)
-
-    # # GUESSING PRACTICE
+    total_points = 0
+    # GUESSING PRACTICE
     for practice_round in [1, 2]:
         if practice_round == 2:
-            guess_instructions = ["""
-    You'll now do one more round of guessing practice.
-    
-    This time, guess the safe response shown in green every trial, and see how many points you earn guessing this way.
-    
-    Press the Space Bar to begin.
-    """]
+            guess_instructions = ["""You'll now do one more round of guessing practice.
+
+This time, guess the safe response shown in green every trial, and see how many points you earn guessing this way.
+
+Press the Space Bar to begin.
+"""]
             trials.give_instructions(win, event, guess_instructions)
 
-        total_points = 0
         bias_trials = bias_trials.sample(frac=1).reset_index(drop=True)
         for x in bias_trials.itertuples():
             # Display guess probe and collect mouse click response
@@ -192,29 +189,27 @@ def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
     # Study Practice Instructions
     study_practice_instructions = [
         """Now that you know how the points work with "safe" and "risky" options, it's time to learn about the words you'll \
-    be studying and memorizing in this experiment.
+be studying and memorizing in this experiment.
+
+You'll see words on the screen one at a time, and get to see each word for a few seconds. Each word you see will also be \
+shown with a person's face. In addition to remembering the word you see, you also need to remember if you studied it \
+with a male or female face.
     
-    You'll see words on the screen one at a time, and get to see each word for a few seconds. Each word you see will also be \
-    shown with a person's face. In addition to remembering the word you see, you also need to remember if you studied it \
-    with a male or female face.
-    
-    Press the Space Bar to move forward.
-    
-    """,
+Press the Space Bar to move forward.
+""",
         """To help you remember if you studied a word with a male or female face, you'll get practice during the study list.
+
+After you study four word and face pairs, you'll take a test on those four words, and for each one, decide if the word was \
+studied with a male or female face.
     
-    After you study four word and face pairs, you'll take a test on those four words, and for each one, decide if the word was \
-    studied with a male or female face.
+On the practice test, press the "z" key for "Male Face" and press the "/" key for "Female Face". You'll earn 2 points for \
+a correct answer, and lose 2 points for an incorrect answer, so try your best! After the test on each word, you'll get a \
+reminder about the correct answer.
     
-    On the practice test, press the "z" key for "Male Face" and press the "/" key for "Female Face". You'll earn 2 points for \
-    a correct answer, and lose 2 points for an incorrect answer, so try your best! After the test on each word, you'll get a \
-    reminder about the correct answer.
-    
-    Press the Space Bar to move forward.
-    """,
-        """Let's begin with a short list of practice words and faces. Press the Space Bar to begin studying the practice list
-    """
-    ]
+Press the Space Bar to move forward.
+""",
+        """Let's begin with a short list of practice words and faces. Press the Space Bar to begin studying the practice list.
+"""]
 
     trials.give_instructions(win, event, study_practice_instructions)
 
@@ -304,23 +299,22 @@ def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
     # Recognition Practice Instructions
     recognition_practice_instructions = [
         """Now it's time to test your memory for the words you studied. This test will have two parts on each trial.
-        
-    Before you see the test word, you'll have to guess whether the word that appears will be a word you studied, or new, \
-    unstudied word. Just like the guessing practice you did in the beginning, one option will be "Safe" (in green) and the \
-    other will be "Risky" (in red).
+
+Before you see the test word, you'll have to guess whether the word that appears will be a word you studied, or new, \
+unstudied word. Just like the guessing practice you did in the beginning, one option will be "Safe" (in green) and the \
+other will be "Risky" (in red).
+
+After you make your guess, the test word will appear. Sometimes this will be a word you studied, and sometimes it will \
+be a new, unstudied word. Click on the buttons along the bottom of the screen to respond studied or unstudied, once you \
+decide. Just like the guessing part, one option will be "Safe" and the other will be "Risky".
     
-    After you make your guess, the test word will appear. Sometimes this will be a word you studied, and sometimes it will \
-    be a new, unstudied word. Click on the buttons along the bottom of the screen to respond studied or unstudied, once you \
-    decide. Just like the guessing part, one option will be "Safe" and the other will be "Risky".
-    
-    Press the Space Bar to move forward.
-    """,
+Press the Space Bar to move forward.
+""",
 
         """Let's practice by testing your memory for the short list of words you just studied.
     
-    Press the Space Bar to begin the memory test
-    """
-    ]
+Press the Space Bar to begin the memory test
+"""]
 
     trials.give_instructions(win, event, recognition_practice_instructions)
 
@@ -393,14 +387,13 @@ def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
         "You've earned %i total points so far. Press the Space Bar to continue." % total_points,
 
         """It's time for one last test. On this final test, you'll be shown each word that you studied, and your job is to \
-    remember if it was studied with a male or a female face".
+remember if it was studied with a male or a female face".
     
-    This test will be just like when  you practiced during the study list. Press the "z" key for "Male Face" and press \
-    the "/" key for "Female Face".
+This test will be just like when  you practiced during the study list. Press the "z" key for "Male Face" and press \
+the "/" key for "Female Face".
     
-    Press the Space Bar to begin the face memory test.
-    """
-    ]
+Press the Space Bar to begin the face memory test.
+"""]
 
     trials.give_instructions(win, event, source_practice_instructions)
 
@@ -429,10 +422,10 @@ def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
     begin_exp_instructions = [
         """That's the end of the practice phase - it's time for the real experiment.
         
-    The real experiment will be exactly like the practice you just did, but with more words to remember.
+The real experiment will be exactly like the practice you just did, but with more words to remember.
     
-    If you have any questions, please ask the experimenter now. If not, press the Space Bar to begin. Good luck!
-    """
+If you have any questions, please ask the experimenter now. If not, press the Space Bar to begin. Good luck!
+"""
     ]
 
     trials.give_instructions(win, event, begin_exp_instructions)
