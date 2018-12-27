@@ -605,10 +605,8 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
             y.opacity = 1
         for y in [studied_recog, unstudied_recog, studied_guess, unstudied_guess]:
             y.contrast = 1
-        core.wait(2 - (core.getTime() - t))
 
-        win.flip()
-        core.wait(.5)
+        core.wait(.5 - (core.getTime() - t))
 
     total_points_feedback.text = 'You earned %i points during the word memory test!\n\nPress the space bar to begin the face memory test.' % total_points
     total_points_feedback.draw()
