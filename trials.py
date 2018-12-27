@@ -1,5 +1,5 @@
 from psychopy.core import Clock
-from psychopy import visual
+from psychopy import visual, event
 timer = Clock()
 
 
@@ -68,9 +68,10 @@ def draw_source_test(x, word, question, options):
     options.draw()
 
 
-def source_test_response(x, event):
-    timer.reset()
+def source_test_response(x):
     response_map = {'z': 'm', 'slash': 'f'}
+    event.clearEvents()
+    timer.reset()
 
     pressed = []
     while not pressed:
@@ -80,6 +81,7 @@ def source_test_response(x, event):
     rt = pressed[0][1]
     correct = True if response == x.source else False
     points = 2 if correct else -2
+
     return response, rt, correct, points
 
 

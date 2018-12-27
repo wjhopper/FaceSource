@@ -247,7 +247,7 @@ Press the Space Bar to move forward.
             win.flip()
 
             # Waiting for key response
-            response, rt, correct, points = trials.source_test_response(x, event)
+            response, rt, correct, points = trials.source_test_response(x)
             block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, rt, correct, points]
 
             # Give the accuracy/point feedback
@@ -416,7 +416,7 @@ Press the Space Bar to begin the face memory test.
         win.flip()
 
         # Waiting for key response
-        response, rt, correct, points = trials.source_test_response(x, event)
+        response, rt, correct, points = trials.source_test_response(x)
         total_points += points
         practice_source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, rt, correct, points]
 
@@ -489,7 +489,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
             win.flip()
 
             # Waiting for key response
-            response, rt, correct, points = trials.source_test_response(x, event)
+            response, rt, correct, points = trials.source_test_response(x)
             block.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, rt, correct, points]
             total_points += points
 
@@ -643,7 +643,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
         win.flip()
 
         # Waiting for key response
-        response, rt, correct, points = trials.source_test_response(x, event)
+        response, rt, correct, points = trials.source_test_response(x)
         total_points += points
         source_test.loc[x.Index, ['response', 'RT', 'correct', 'points']] = [response, rt, correct, points]
 
