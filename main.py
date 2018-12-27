@@ -645,6 +645,19 @@ def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
         win.flip()
         core.wait(.25)
 
+    # Saving the data to CSV
+    study_trials['subject'] = subject
+    study_trials = study_trials[['subject'] + study_trials.columns.tolist()[:-1]]
+    study_trials.to_csv(os.path.join('data', subject + '_study.csv'), index=False, index_label=False)
+
+    recog_trials['subject'] = subject
+    recog_trials = recog_trials[['subject'] + recog_trials.columns.tolist()[:-1]]
+    recog_trials.to_csv(os.path.join('data', subject + '_recognition.csv'), index=False, index_label=False)
+
+    source_test['subject'] = subject
+    source_test = source_test[['subject'] + source_test.columns.tolist()[:-1]]
+    source_test.to_csv(os.path.join('data', subject + '_source.csv'), index=False, index_label=False)
+
     # Close the window
     win.close()
 
