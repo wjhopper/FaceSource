@@ -440,7 +440,7 @@ def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96):
     # Create the study list
     # Cross the two sources and the 24 blocks
     study_trials = expand.expand_grid({'source': ['m', 'f'],
-                                       'block': list(range(1, 25)),
+                                       'block': list(range(1, (n_items / 4) + 1)),
                                        })
     study_trials.block = study_trials.block.astype(np.int32)
     # Replicate twice, to make 4 trials per block
@@ -656,6 +656,9 @@ if __name__ == "__main__":
     if not os.path.exists('data') and not os.path.isfile('data'):
         os.mkdir('data')
 
+    min_trials = 16
+    max_trials = 548
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--subject",
                         help="Manually set the subject ID. Useful if you want to impose a numerical sequence of subject IDs as generated \
@@ -669,7 +672,7 @@ if __name__ == "__main__":
                         choices=['between', 'within'] + bias_options
                         )
     parser.add_argument("--n_items",
-                        help="How many words should be studied. Minimum 12, maximum 548. Value must be a multiple of 4.",
+                        help="How many words should be studied. Minimum %i, maximum %i. Value must be a multiple of 4." % (min_trials, max_trials),
                         default=96, type=int,
                         )
     parser.add_argument("--words",
@@ -685,7 +688,10 @@ if __name__ == "__main__":
         args.bias = bias_options
 
     if args.n_items % 4 != 0:
-        ValueError('nItems argument value must be a multiple of 4')
+        raise ValueError('n_items argument value must be a multiple of 4')
+
+    if not (16 <= args.n_items <= 548):
+        raise ValueError('n_items argument value must be between %i and %i' % (min_trials, max_trials))
 
     if not os.path.isabs(args.words):
         args.words = os.path.abspath(args.words)
@@ -693,5 +699,4 @@ if __name__ == "__main__":
     with open(args.words, 'r') as f:
         words = f.read().splitlines()
 
-    print(args)
     run(words=words, subject=args.subject, bias=args.bias, n_items=args.n_items)
