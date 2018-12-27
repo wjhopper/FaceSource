@@ -12,7 +12,7 @@ import os
 
 # Ensure Python's RNG is seeded with current time
 random.seed()
-
+max_points = 700
 
 def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96, fullscreen=False):
 
@@ -470,6 +470,8 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     # Study Practice Trials Loop
     total_points = 0
     for b in study_trials.index.unique(0):
+        if total_points >= max_points:
+            break
         block = study_trials.loc[[b]]
         # Show stimuli
         for x in block.itertuples():
@@ -485,6 +487,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
         block = block.sample(frac=1)
         block['test_order'] = list(range(1, len(block) + 1))
         for x in block.itertuples():
+
             # Practice Test
             trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
             win.flip()
@@ -505,11 +508,6 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
             core.wait(.5)
 
         study_trials.update(block)
-
-    total_points_feedback.text = 'You earned %i points during the study list!\n\nPress the space bar to begin the word memory test.' % total_points
-    total_points_feedback.draw()
-    win.flip()
-    event.waitKeys(keyList=['space'])
 
     # Creating Recognition trials schema
     # We need to drop the first and last block, so we select items from the second and second-to-last blocks
@@ -548,14 +546,22 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
                                         ['guess', 'guess_correct', 'guess_RT', 'guess_points',
                                          'recog', 'recog_correct', 'recog_RT', 'recog_points'
                                          ])
+    if total_points < max_points:
 
-    for t in ['5', '4', '3', '2', '1']:
-        total_points_feedback.text = t
+        total_points_feedback.text = 'You earned %i points during the study list!\n\nPress the space bar to begin the word memory test.' % total_points
         total_points_feedback.draw()
         win.flip()
-        core.wait(1)
+        event.waitKeys(keyList=['space'])
+
+        for t in ['5', '4', '3', '2', '1']:
+            total_points_feedback.text = t
+            total_points_feedback.draw()
+            win.flip()
+            core.wait(1)
 
     for x in recog_trials.itertuples():
+        if total_points >= max_points:
+            break
 
         # Draw the guess response buttons
         guess_reminder.draw()
@@ -614,11 +620,6 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
 
         core.wait(.5 - (core.getTime() - t))
 
-    total_points_feedback.text = 'You earned %i points during the word memory test!\n\nPress the space bar to begin the face memory test.' % total_points
-    total_points_feedback.draw()
-    win.flip()
-    event.waitKeys(keyList=['space'])
-
     # Source testing
     source_test = study_trials.copy()
     # Again, begin the test with the second block of 4 words, but randomly order trials after that
@@ -631,14 +632,22 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     source_test['trial'] = range(1, len(source_test)+1)
     source_test = source_test.set_index('trial', append=True)
 
-    # Begin Source Test Countdown
-    for t in ['5', '4', '3', '2', '1']:
-        total_points_feedback.text = t
+    if total_points < max_points:
+        total_points_feedback.text = 'You earned %i points during the word memory test!\n\nPress the space bar to begin the face memory test.' % total_points
         total_points_feedback.draw()
         win.flip()
-        core.wait(1)
+        event.waitKeys(keyList=['space'])
+        # Begin Source Test Countdown
+        for t in ['5', '4', '3', '2', '1']:
+            total_points_feedback.text = t
+            total_points_feedback.draw()
+            win.flip()
+            core.wait(1)
 
     for x in source_test.itertuples():
+        if total_points >= max_points:
+            break
+
         # Source test probe
         trials.draw_source_test(x, study_word, source_question_text, source_response_opts)
         win.flip()
@@ -671,6 +680,17 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     source_test['subject'] = subject
     source_test = source_test[['subject'] + source_test.columns.tolist()[:-1]]
     source_test.to_csv(os.path.join('data', subject + '_source.csv'), index=False, index_label=False)
+
+    if total_points >= max_points:
+        goodbye_text = "You earned %i points and finished the experiment early, great job!" % total_points
+    else:
+        goodbye_text = "Great work, you finished all the trials in the experiment!"
+
+    goodbye_text += "\n\nPress the Space Bar to close the experiment. Thanks for participating!"
+    goodbye = visual.TextStim(win, text=goodbye_text)
+    goodbye.draw()
+    win.flip()
+    event.waitKeys(keyList=['space'])
 
     # Close the window
     win.close()
