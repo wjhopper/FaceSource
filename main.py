@@ -375,7 +375,7 @@ Press the Space Bar to begin the memory test
         for y in [studied_recog, unstudied_recog, studied_guess, unstudied_guess]:
             y.contrast = 1
 
-        core.wait(.5 - (t - core.getTime()))
+        core.wait(.5 - (core.getTime() - t))
 
     # Source testing
     practice_source_test = practice_study_trials.copy()
@@ -592,10 +592,10 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
             y.opacity = 1
         for y in [studied_recog, unstudied_recog, studied_guess, unstudied_guess]:
             y.contrast = 1
-        core.wait(2 - (t - core.getTime()))
+        core.wait(2 - (core.getTime() - t))
 
         win.flip()
-        core.wait(.5 - (t - core.getTime()))
+        core.wait(.5)
 
     total_points_feedback.text = 'You earned %i points during the word memory test!\n\nPress the space bar to begin the face memory test.' % total_points
     total_points_feedback.draw()
