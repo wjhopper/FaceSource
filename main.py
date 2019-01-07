@@ -150,7 +150,7 @@ Press the Space Bar to begin.
 
     # Set up target and lure word pools
     n_targets = 8 + n_items  # 8 practice words, 96 words (default) for real trials
-    n_lures = (8 + n_items - 8)  # 8 practice lures, 8 fewer lures than targer for real trials because 4 primacy and recency items are not tested
+    n_lures = (8 + n_items - 8)  # 8 practice lures, 8 fewer lures than target for real trials because 4 primacy and recency items are not tested
     target_pool = words[:n_targets]
     lure_pool = words[n_targets:(n_targets + n_lures)]
 
@@ -722,7 +722,7 @@ if __name__ == "__main__":
                         )
     parser.add_argument("--n_items",
                         help="How many words should be studied. Minimum %i, maximum %i. Value must be a multiple of 4." % (min_trials, max_trials),
-                        default=96, type=int,
+                        default=56, type=int,
                         )
     parser.add_argument("--words",
                         help="Path to plain text file containing word stimuli. Each word should be on its own line. \
@@ -749,5 +749,9 @@ if __name__ == "__main__":
 
     with open(args.words, 'r') as f:
         words = f.read().splitlines()
+
+    min_stimuli = args.n_items + 8*2 + (args.n_items - 8)
+    if len(words) < min_stimuli:
+        raise ValueError("Not enough stimuli found in %s. Experiment requires at least %i words" % (args.words, min_stimuli))
 
     run(words=words, subject=args.subject, bias=args.bias, n_items=args.n_items, fullscreen=args.fullscreen)
