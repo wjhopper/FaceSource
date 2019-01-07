@@ -14,6 +14,7 @@ import os
 random.seed()
 max_points = 700
 
+
 def run(words, subject=None, bias=('studied', 'unstudied'), n_items=96, fullscreen=False):
 
     if subject is None:
@@ -149,8 +150,8 @@ Press the Space Bar to begin.
     faces_table['f'] = np.random.permutation(faces_table['f'])
 
     # Set up target and lure word pools
-    n_targets = 8 + n_items  # 8 practice words, 96 words (default) for real trials
-    n_lures = (8 + n_items - 8)  # 8 practice lures, 8 fewer lures than target for real trials because 4 primacy and recency items are not tested
+    n_targets = 8 + n_items + 8 # 8 practice words, 8 additional words which studied but not tested, to counteract primacy and recency
+    n_lures = 8 + n_items  # 8 practice lures
     target_pool = words[:n_targets]
     lure_pool = words[n_targets:(n_targets + n_lures)]
 
@@ -447,7 +448,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     # Create the study list
     # Cross the two sources and the 24 blocks
     study_trials = expand.expand_grid({'source': ['m', 'f'],
-                                       'block': list(range(1, (n_items / 4) + 1)),
+                                       'block': list(range(1, len(target_pool)/4 + 1)),
                                        })
     study_trials.block = study_trials.block.astype(np.int32)
     # Replicate twice, to make 4 trials per block
@@ -533,7 +534,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
                                       z.assign(safe=np.random.permutation(bias * (len(z) / len(bias))))
                                       )
     # Begin the test with the second block of 4 words, but randomly order trials after that
-    recog_trials = pd.concat([recog_trials.loc[[2]].reset_index(level=1, drop=True),
+    recog_trials = pd.concat([recog_trials.loc[[2]].sample(frac=1).reset_index(level=1, drop=True),
                               recog_trials.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
                               ]
                              )
@@ -623,7 +624,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     # Source testing
     source_test = study_trials.copy()
     # Again, begin the test with the second block of 4 words, but randomly order trials after that
-    source_test = pd.concat([source_test.loc[[2]].reset_index(level=1, drop=True),
+    source_test = pd.concat([source_test.loc[[2]].sample(frac=1).reset_index(level=1, drop=True),
                              source_test.loc[3:source_test.index.get_level_values('block').max()-1].sample(frac=1).reset_index(level=1, drop=True)
                              ])
     # Blank out response variables
@@ -705,7 +706,7 @@ if __name__ == "__main__":
     if not os.path.exists('data') and not os.path.isfile('data'):
         os.mkdir('data')
 
-    min_trials = 16
+    min_trials = 8
     max_trials = 548
 
     parser = argparse.ArgumentParser()
@@ -741,7 +742,7 @@ if __name__ == "__main__":
     if args.n_items % 4 != 0:
         raise ValueError('n_items argument value must be a multiple of 4')
 
-    if not (16 <= args.n_items <= 548):
+    if not (min_trials <= args.n_items <= max_trials):
         raise ValueError('n_items argument value must be between %i and %i' % (min_trials, max_trials))
 
     if not os.path.isabs(args.words):
@@ -750,7 +751,8 @@ if __name__ == "__main__":
     with open(args.words, 'r') as f:
         words = f.read().splitlines()
 
-    min_stimuli = args.n_items + 8*2 + (args.n_items - 8)
+    # min_stimuli = # of test trials + # of practice test trials and 8 primacy/recency padding items on study list
+    min_stimuli = args.n_items*2 + 8*2 + 8
     if len(words) < min_stimuli:
         raise ValueError("Not enough stimuli found in %s. Experiment requires at least %i words" % (args.words, min_stimuli))
 
