@@ -150,7 +150,7 @@ Press the Space Bar to begin.
     faces_table['f'] = np.random.permutation(faces_table['f'])
 
     # Set up target and lure word pools
-    n_targets = 8 + n_items + 8 # 8 practice words, 8 additional words which studied but not tested, to counteract primacy and recency
+    n_targets = 8 + n_items + 8  # 8 practice words, 8 additional words which studied but not tested, to counteract primacy and recency
     n_lures = 8 + n_items  # 8 practice lures
     target_pool = words[:n_targets]
     lure_pool = words[n_targets:(n_targets + n_lures)]
@@ -629,7 +629,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
                              ])
     # Blank out response variables
     source_test[['response', 'RT', 'correct', 'points']] = np.nan
-    source_test = source_test.drop(columns='test_order') # row number is test order here, so we can remove this column
+    source_test = source_test.drop(columns='test_order')  # row number is test order here, so we can remove this column
 
     # Add a trial number index
     source_test['trial'] = range(1, len(source_test)+1)
@@ -703,6 +703,9 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
 
 
 if __name__ == "__main__":
+
+    os.chdir(os.path.dirname(__file__))  # set the working dir. to the dir. where the file being executed is stored
+
     if not os.path.exists('data') and not os.path.isfile('data'):
         os.mkdir('data')
 
@@ -744,9 +747,6 @@ if __name__ == "__main__":
 
     if not (min_trials <= args.n_items <= max_trials):
         raise ValueError('n_items argument value must be between %i and %i' % (min_trials, max_trials))
-
-    if not os.path.isabs(args.words):
-        args.words = os.path.abspath(args.words)
 
     with open(args.words, 'r') as f:
         words = f.read().splitlines()
