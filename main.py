@@ -539,8 +539,9 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     recog_trials = recog_trials.apply(lambda z:
                                       z.assign(safe=np.random.permutation(bias * (len(z) / len(bias))))
                                       )
+    recog_trials = recog_trials.sort_index()
     # Begin the test with the second block of 4 words, but randomly order trials after that
-    recog_trials = pd.concat([recog_trials.loc[[2]].sample(frac=1).reset_index(level=1, drop=True),
+    recog_trials = pd.concat([recog_trials.loc[[2,2]].sample(frac=1).reset_index(level=1, drop=True),
                               recog_trials.loc[3:].sample(frac=1).reset_index(level=1, drop=True)
                               ]
                              )
