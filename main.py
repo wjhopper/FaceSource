@@ -112,8 +112,8 @@ Press the Space Bar to begin.
 """]
 
     # GUESSING PRACTICE
-    total_points = 0
     for practice_round in [1, 2]:
+        total_points = 0
         if practice_round == 2:
             trials.give_instructions(win, event, guess_instructions)
 
@@ -137,7 +137,7 @@ Press the Space Bar to begin.
             win.flip()
             core.wait(.5)
 
-        total_points_feedback.text = 'You earned %i points.\n\nPress the space bar to continue.' % total_points
+        total_points_feedback.text = 'You earned %i points this round.\n\nPress the space bar to continue.' % total_points
         total_points_feedback.draw()
         win.flip()
         event.waitKeys(keyList=['space'])
