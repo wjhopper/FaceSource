@@ -469,6 +469,11 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
     study_trials.set_index(['block', list(range(len(study_trials)))],
                            drop=False, inplace=True)
 
+    # Update the image stimuli
+    face_stim = {'m': visual.ImageStim(win, image=faces_table.loc[1, 'm'], pos=(0, .4)),
+                 'f': visual.ImageStim(win, image=faces_table.loc[1, 'f'], pos=(0, .4))
+                 }
+
     # Study Practice Trials Loop
     total_points = 0
     for b in study_trials.index.get_level_values(0).unique():
