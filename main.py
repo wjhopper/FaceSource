@@ -636,7 +636,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
                              ])
     # Blank out response variables
     source_test[['response', 'RT', 'correct', 'points']] = np.nan
-    source_test = source_test.drop(columns='test_order')  # row number is test order here, so we can remove this column
+    source_test = source_test.drop(labels='test_order',axis=1)  # row number is test order here, so we can remove this column
 
     # Add a trial number index
     source_test['trial'] = range(1, len(source_test)+1)
