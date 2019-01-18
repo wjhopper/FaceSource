@@ -228,7 +228,7 @@ Press the Space Bar to move forward.
 
     # Study Practice Loop
     total_points = 0
-    for b in practice_study_trials.index.unique(0):
+    for b in practice_study_trials.index.get_level_values(0).unique():
         block = practice_study_trials.loc[[b]]
         # Show stimuli
         for x in block.itertuples():
@@ -470,7 +470,7 @@ If you have any questions, please ask the experimenter now. If not, press the Sp
 
     # Study Practice Trials Loop
     total_points = 0
-    for b in study_trials.index.unique(0):
+    for b in study_trials.index.get_level_values(0).unique():
         if total_points >= max_points:
             break
         block = study_trials.loc[[b]]
