@@ -190,7 +190,8 @@ Press the Space Bar to begin.
     study_word = visual.TextStim(win, pos=(0, 0))
 
     # Make the source responses text
-    source_response_opts = visual.TextStim(win, pos=(0, -.8), text="Z = Male                       / = Female")
+    source_response_opts = visual.TextStim(win, pos=(0, -.8), text="Z = Male                   / = Female",
+                                           wrapWidth=2)
 
     # Make the source question text
     source_question_text = visual.TextStim(win, pos=(0, .8), text="Did you study this word with a male or female face?",
